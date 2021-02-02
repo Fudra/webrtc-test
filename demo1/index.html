@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      .flex {
+        display: flex;
+      }
+
+      .flex-col {
+        flex-direction: column;
+      }
+
+      .mx-4 {
+        margin-left: 1rem;
+        margin-right: 1rem;
+      }
+
+      .mb-3 {
+        margin-bottom: 0.75rem;
+      }
+
+      #video-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, 200px);
+        grid-auto-rows: 200px;
+        margin-bottom: 40px;
+      }
+
+      video {
+        object-fit: cover;
+        object-position: center;
+        border-radius: 999px;
+
+        width: 300px;
+        height: 300px;
+      }
+      #local-video {
+        border: 10px solid lightgreen;
+      }
+
+      #guest-video {
+        border: 10px solid lightcoral;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="video-grid"></div>
+
+    <div class="flex">
+      <div class="flex flex-col mx-4">
+        <label for="ice">ICE Canditate</label>
+        <textarea
+          name="ice"
+          id="ice"
+          cols="30"
+          rows="10"
+          class="mb-3"
+        ></textarea>
+        <button name="btn-offer">1. Create Offer</button>
+        <button name="btn-answer">3. Create Answer</button>
+      </div>
+
+      <div class="flex flex-col mx-4">
+        <label for="description"> Remote Description</label>
+        <textarea
+          name="description"
+          id="description"
+          cols="30"
+          rows="10"
+          class="mb-3"
+        ></textarea>
+        <button name="btn-set–description">2./4. Set Remote Description</button>
+      </div>
+    </div>
+
+    <script src="demo1/demo1.js"></script>
+  </body>
+</html>

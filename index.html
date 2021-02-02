@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      #video-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, 200px);
+        grid-auto-rows: 200px;
+        margin-bottom: 40px;
+      }
+
+      video {
+        width: 100%;
+        height: 100%;
+        border: 1px solid black;
+        object-fit: cover;
+        object-position: center;
+        border-radius: 999px;
+      }
+
+      .flex {
+        display: flex;
+      }
+
+      .flex-col {
+        flex-direction: column;
+      }
+
+      .mx-4 {
+        margin-left: 1rem;
+        margin-right: 1rem;
+      }
+
+      .mb-3 {
+        margin-bottom: 0.75rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="flex flex-row mx-4 mb-3">
+      <input
+        type="number"
+        placeholder="current user value"
+        id="user-value"
+        value="0"
+      />
+      <button name="btn-join">Join</button>
+      <button name="btn-end">End call</button>
+    </div>
+
+    <div id="video-grid">
+      <video autoplay playinline muted class="js-video"></video>
+      <video autoplay playinline muted class="js-video"></video>
+      <video autoplay playinline muted class="js-video"></video>
+      <video autoplay playinline muted class="js-video"></video>
+      <video autoplay playinline muted class="js-video"></video>
+      <video autoplay playinline muted class="js-video"></video>
+    </div>
+
+    <script src="./script.js"></script>
+  </body>
+</html>
