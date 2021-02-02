@@ -18,6 +18,8 @@
   const RTC_STATES = {
     CONNECTED: 'connected',
     CONNECTING: 'connecting',
+    DISCONNECTED: 'disconnected',
+    FAILED: 'failed',
   };
 
   const PEER_CONFIG = {
@@ -118,19 +120,20 @@
 
   const handlePeerConnection = async () => {
     const offers = await findOffers();
+    console.log(offers);
 
     try {
       if (peerConnectionOffered !== RTC_STATES.CONNECTED) {
         const answers = await findAnswer(offers[0]);
+        const answer = answers[0];
 
-        console.log(answers[0]);
-
-        if (answers.length !== 0 && answers[0].answer !== null) {
+        if (answers.length !== 0 && answer.answer !== null) {
           await peerConnectionOffered.setRemoteDescription({
             type: 'answer',
-            sdp: answers[0].answer,
+            sdp: answer.answer,
           });
 
+          // should be the player position
           peerConnectionsMap.set(answer.negotiator, peerConnectionOffered);
         }
       }
@@ -175,8 +178,6 @@
     const pc = initPeer();
 
     const offer = await negotiateLocalDescription(pc, true);
-    console.log('createPeerOffer', offer);
-
     await sendOffer(offer);
 
     return pc;
@@ -185,7 +186,6 @@
   const createPeerAnswer = async (offer) => {
     const pc = initPeer();
 
-    // create answer
     await pc.setRemoteDescription({ type: 'offer', sdp: offer.offer });
     const answer = await negotiateLocalDescription(pc, false);
     await sendAnswer(offer, answer);
