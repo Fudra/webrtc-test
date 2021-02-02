@@ -15,6 +15,11 @@
     audio: false,
   };
 
+  const RTC_STATES = {
+    CONNECTED: 'connected',
+    CONNECTING: 'connecting',
+  };
+
   const PEER_CONFIG = {
     // iceServers: [
     //  { urls: 'stun:stun.services.mozilla.com' },
@@ -84,6 +89,9 @@
 
   // -------- /api calls ---------
 
+  const sleep = (delay = 2000) => {
+    return new Promise((resolve) => setTimeout(resolve, delay));
+  };
   /**
    *
    * @param {*} connection
@@ -106,6 +114,29 @@
         connection.setLocalDescription(sessionDescription)
       );
     });
+  };
+
+  const handlePeerConnection = async () => {
+    const offers = await findOffers();
+
+    try {
+      if (peerConnectionOffered !== RTC_STATES.CONNECTED) {
+        const answers = await findAnswer(offers[0]);
+
+        console.log(answers[0]);
+
+        if (answers.length !== 0 && answers[0].answer !== null) {
+          await peerConnectionOffered.setRemoteDescription({
+            type: 'answer',
+            sdp: answers[0].answer,
+          });
+
+          peerConnectionsMap.set(answer.negotiator, peerConnectionOffered);
+        }
+      }
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleIncommingOffers = async () => {
@@ -155,12 +186,19 @@
     const pc = initPeer();
 
     // create answer
-
     await pc.setRemoteDescription({ type: 'offer', sdp: offer.offer });
     const answer = await negotiateLocalDescription(pc, false);
     await sendAnswer(offer, answer);
 
     return pc;
+  };
+
+  const gameLoop = async () => {
+    while (true) {
+      await handlePeerConnection();
+
+      await sleep(1000);
+    }
   };
 
   const init = async () => {
@@ -174,6 +212,8 @@
     await handleIncommingOffers();
 
     peerConnectionOffered = await createPeerOffer();
+
+    gameLoop();
   };
 
   // buttons

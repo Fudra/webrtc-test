@@ -70,10 +70,7 @@ app.get('/negotiations', (req, res) => {
     );
     // Object.equals && isAnswering()
     let neg = negotiations.filter(
-      (n) =>
-        n.offer == requestNegotiation.offer &&
-        n.offer !== null &&
-        n.answer !== null
+      (n) => n.offer == requestNegotiation.offer && n.answer !== null
     );
 
     res.send(neg);
