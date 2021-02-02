@@ -114,6 +114,9 @@
     console.log(offers);
 
     for (const offer of offers) {
+      const pc = await createPeerAnswer(offer);
+
+      peerConnectionsMap.set(offer.negotiator, pc);
     }
   };
 
@@ -154,8 +157,8 @@
     // create answer
 
     await pc.setRemoteDescription({ type: 'offer', sdp: offer.offer });
-    const answer = await this.negotiateLocalDescription(pc, false);
-    await this.sendAnswer(offer, answer);
+    const answer = await negotiateLocalDescription(pc, false);
+    await sendAnswer(offer, answer);
 
     return pc;
   };

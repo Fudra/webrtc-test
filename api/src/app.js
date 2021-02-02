@@ -66,7 +66,7 @@ app.get('/negotiations', (req, res) => {
 
   if (offerIdentity !== undefined) {
     const requestNegotiation = negotiations.find(
-      (i) => i.offerIdentity == offerIdentity
+      (i) => i.identity == offerIdentity
     );
     // Object.equals && isAnswering()
     let neg = negotiations.filter(
