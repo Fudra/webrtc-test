@@ -54,21 +54,6 @@ app.post('/persons', (req, res) => {
 /**
  * negotators
  */
-app.get('/offer/:id', (req, res) => {
-  let offer = negotation
-    .filter((n) => n.negotiator == req.params.id)
-    //.filter((n) => n.offer !== null)
-    .map((n) => n.offer);
-  res.send(offer);
-});
-
-app.get('/answer/:id', (req, res) => {
-  let answer = negotation
-    .filter((n) => n.negotiator == req.params.id)
-    //.filter((n) => n.answer !== null)
-    .map((n) => n.answer);
-  res.send(answer);
-});
 
 app.get('/negotiations', (req, res) => {
   // grab user
@@ -77,23 +62,33 @@ app.get('/negotiations', (req, res) => {
   // offerIdentity
   const offerIdentity = req.query.offerIdentity;
 
-  if (offerIdentity !== null) {
+  console.log('offerIdentity', offerIdentity);
+
+  if (offerIdentity !== undefined) {
     const requestNegotiation = negotiations.find(
       (i) => i.offerIdentity == offerIdentity
     );
     // Object.equals && isAnswering()
-    return negotiations.filter(
+    let neg = negotiations.filter(
       (n) =>
-        (n.offer =
-          requestNegotiation.offer && n.offer !== null && n.answer !== null)
+        n.offer == requestNegotiation.offer &&
+        n.offer !== null &&
+        n.answer !== null
     );
+
+    res.send(neg);
+    return;
   }
 
   // get last request offer
-  return negotations.filter((n) => n.offer !== null && n.answer == null);
+  let neg = negotiations
+    .sort((a, b) => b.created - a.created)
+    .filter((n) => n.offer !== null && n.answer == null);
+
+  res.send(neg.length > 0 ? [neg[0]] : []);
 });
 
-app.post('/negotiations', (req, _) => {
+app.post('/negotiations', (req, res) => {
   offerIdentity += 1;
 
   const item = {
@@ -104,7 +99,9 @@ app.post('/negotiations', (req, _) => {
     created: Date.now(),
   };
 
-  negotations.push(item);
+  negotiations.push(item);
+
+  res.sendStatus(200);
 });
 
 app.listen(port, () => {

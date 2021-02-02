@@ -52,7 +52,7 @@
 
   const sendAnswer = async (offer, answer) => {
     try {
-      await fetch(`/services/negotiations`, {
+      await fetch(`http://localhost:3030/negotiations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -68,12 +68,13 @@
 
   const sendOffer = async (offer) => {
     try {
-      await fetch(`/services/negotiations`, {
+      await fetch(`http://localhost:3030/negotiations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           negotiator,
-          offer: offer.offer,
+          offer: offer.sdp,
+          answer: null,
         }),
       });
     } catch (error) {
@@ -139,7 +140,8 @@
   const createPeerOffer = async () => {
     const pc = initPeer();
 
-    const offer = await this.negotiateLocalDescription(pc, true);
+    const offer = await negotiateLocalDescription(pc, true);
+    console.log('createPeerOffer', offer);
 
     await sendOffer(offer);
 
