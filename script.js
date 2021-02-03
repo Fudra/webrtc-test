@@ -33,7 +33,7 @@
   const findAnswer = async (offer) => {
     try {
       const response = await fetch(
-        `http://localhost:3030/negotiations?offer=${offer.identity}`,
+        `http://localhost:3030/negotiations?offer=${offer.identity}&requester=${negotiator}`,
         {
           method: 'GET',
           headers: { Accept: 'application/json' },
@@ -47,10 +47,13 @@
 
   const findOffers = async () => {
     try {
-      const response = await fetch(`http://localhost:3030/negotiations`, {
-        method: 'GET',
-        headers: { Accept: 'application/json' },
-      });
+      const response = await fetch(
+        `http://localhost:3030/negotiations?requester=${negotiator}`,
+        {
+          method: 'GET',
+          headers: { Accept: 'application/json' },
+        }
+      );
       return await response.json();
     } catch (err) {
       console.error(err);
@@ -120,10 +123,11 @@
 
   const handlePeerConnection = async () => {
     const offers = await findOffers();
-    console.log(offers);
+    console.log(peerConnectionOffered);
+    return;
 
     try {
-      if (peerConnectionOffered !== RTC_STATES.CONNECTED) {
+      if (peerConnectionOffered.connectionState !== RTC_STATES.CONNECTED) {
         const answers = await findAnswer(offers[0]);
         const answer = answers[0];
 
@@ -198,6 +202,7 @@
       await handlePeerConnection();
 
       await sleep(1000);
+      return;
     }
   };
 

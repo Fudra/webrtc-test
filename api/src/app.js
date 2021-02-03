@@ -55,16 +55,84 @@ app.post('/persons', (req, res) => {
  * negotators
  */
 
+const arrMax = (arr, value) => {
+  const maxElements = arr.map((i) => i[value]);
+  const max = Math.max(...maxElements);
+
+  return arr.find((i) => i[value] === max);
+};
+
+const isOffering = (n) => n.offer !== null && n.answer == null;
+const isAnswering = (n) => n.offer !== null && n.answer !== null;
+
+app.get('/offers', (req, res) => {
+  const requester = Number.parseInt(req.query.requester);
+  /**
+   *  
+        List<Negotiation> negotiations = new ArrayList<>();
+        
+        for(Person player: table.getPlayers()) {
+        	Negotiation neg = player.getNegotiations().stream()
+        			.filter(n -> n.isOffering() && n.getNegotiator().getIdentity() != requesterIdentity)
+        			.max(Comparator.comparing(Negotiation::getCreationTimestamp))
+        			.orElse(null);
+        	
+        	if(neg != null) negotiations.add(neg);
+        }
+        
+        return negotiations;
+   */
+
+  const playersAtTable = new Set(negotiations.map((i) => i.negotiator));
+
+  const negs = [];
+
+  for (const negotiator of Array.from(playersAtTable)) {
+    // get player negotiations
+    const playerNegotiations = negotiations.filter(
+      (n) => n.negotiator == negotiator
+    );
+
+    // filter for offers, expect requester
+    const offers = playerNegotiations.filter(
+      (n) => isOffering(n) && n.negotiator !== requester
+    );
+
+    // get last offer
+    const lastElement = arrMax(offers, 'created');
+
+    if (neg !== undefined) negs.push(lastElement);
+  }
+
+  console.log('negs', negs);
+  res.send(negs);
+});
+
+app.get('/answers', (req, res) => {
+  const requester = Number.parseInt(req.query.requester);
+
+  const playerNegotiations = negotiations.filter(
+    (n) => n.negotiator == requester
+  );
+
+  const max = arrMax(playerNegotiations, 'identity');
+
+  const responseToSend = isAnswering(max) ? max : [];
+
+  res.send(responseToSend);
+});
+
 app.get('/negotiations', (req, res) => {
   // grab user
 
   // grab table
   // offerIdentity
-  const offerIdentity = req.query.offerIdentity;
+  const offerIdentity = Number.parseInt(req.query.offerIdentity);
+  const requester = Number.parseInt(req.query.requester);
 
   console.log('offerIdentity', offerIdentity);
 
-  if (offerIdentity !== undefined) {
+  if (!Number.isNaN(offerIdentity)) {
     const requestNegotiation = negotiations.find(
       (i) => i.identity == offerIdentity
     );
@@ -77,12 +145,29 @@ app.get('/negotiations', (req, res) => {
     return;
   }
 
-  // get last request offer
-  let neg = negotiations
-    .sort((a, b) => b.created - a.created)
-    .filter((n) => n.offer !== null && n.answer == null);
+  // get last request offers for requester
 
-  res.send(neg.length > 0 ? [neg[0]] : []);
+  // get unique player ids
+  const playersAtTable = new Set(negotiations.map((i) => i.negotiator));
+
+  console.log('playersAtTable', playersAtTable);
+  const negs = [];
+  console.log('negotiations', negotiations);
+
+  for (const playerID of Array.from(playersAtTable)) {
+    console.log('playerID', playerID, requester);
+    if (playerID == requester) continue;
+
+    let neg = negotiations.filter((n) => n.negotiator !== playerID);
+    //.filter((n) => n.offer !== null && n.answer == null)
+    //.sort((a, b) => b.created - a.created);
+    console.log('neg', neg);
+
+    negs.push(neg[0]);
+  }
+
+  console.log('negs', negs);
+  res.send(negs);
 });
 
 app.post('/negotiations', (req, res) => {
