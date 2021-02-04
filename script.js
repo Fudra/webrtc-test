@@ -1,9 +1,11 @@
 (async () => {
-  const videoGrid = document.getElementById('video-grid');
+  //const videoGrid = document.getElementById('video-grid');
 
   let negotiator = 0;
 
   const peerConnectionsMap = new Map();
+
+  const peerConnectionsVideosMap = new Map();
 
   let localVideoStream = null;
 
@@ -30,16 +32,19 @@
   };
 
   // -------- api calls ---------
-  const findAnswer = async (offer) => {
+  const findAnswer = async () => {
     try {
       const response = await fetch(
-        `http://localhost:3030/negotiations?offer=${offer.identity}&requester=${negotiator}`,
+        `http://localhost:3030/answers?requester=${negotiator}`,
         {
           method: 'GET',
           headers: { Accept: 'application/json' },
         }
       );
-      return response.status === 200 ? await response.json() : null;
+      let answer = await response.json();
+      if (response.status === 200) {
+        return answer.length > 0 ? answer[0] : null;
+      }
     } catch (err) {
       console.error(err);
     }
@@ -48,7 +53,7 @@
   const findOffers = async () => {
     try {
       const response = await fetch(
-        `http://localhost:3030/negotiations?requester=${negotiator}`,
+        `http://localhost:3030/offers?requester=${negotiator}`,
         {
           method: 'GET',
           headers: { Accept: 'application/json' },
@@ -66,7 +71,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          negotiator,
+          negotiator: offer.negotiator,
           offer: offer.offer,
           answer: answer.sdp,
         }),
@@ -94,6 +99,7 @@
 
   // -------- /api calls ---------
 
+  // -------- utils ----------
   const sleep = (delay = 2000) => {
     return new Promise((resolve) => setTimeout(resolve, delay));
   };
@@ -121,25 +127,30 @@
     });
   };
 
-  const handlePeerConnection = async () => {
-    const offers = await findOffers();
-    console.log(peerConnectionOffered);
-    return;
+  // --------- /utils --------------
 
+  // --------- webrtc ---------------
+
+  const handlePeerConnection = async () => {
     try {
       if (peerConnectionOffered.connectionState !== RTC_STATES.CONNECTED) {
-        const answers = await findAnswer(offers[0]);
-        const answer = answers[0];
+        const negotiation = await findAnswer();
+        if (!!negotiation) {
+          // Set answer to establish connection
 
-        if (answers.length !== 0 && answer.answer !== null) {
           await peerConnectionOffered.setRemoteDescription({
             type: 'answer',
-            sdp: answer.answer,
+            sdp: negotiation.answer,
           });
 
           // should be the player position
-          peerConnectionsMap.set(answer.negotiator, peerConnectionOffered);
+          peerConnectionsMap.set(negotiation.negotiator, peerConnectionOffered);
+
+          // Create new peer connection with new offer
+          peerConnectionOffered = await createPeerOffer();
         }
+
+        // todo cleanup
       }
     } catch (error) {
       console.error(error);
@@ -158,18 +169,25 @@
     }
   };
 
-  const initPeer = () => {
+  const initPeer = (position) => {
     const pc = new RTCPeerConnection(PEER_CONFIG);
+
     pc.onaddstream = (obj) => {
-      // todo handle video position
-      console.log('onaddstream', obj);
+      if (position == undefined) return;
+      const peerVideoElement = document.querySelector(
+        `[data-position="${position}"]`
+      );
+      peerVideoElement.autoplay = true;
+      peerVideoElement.srcObject = obj.stream;
+
+      /*
       let vid = document.createElement('video');
       vid.autoplay = true;
       videoGrid.appendChild(vid);
       vid.srcObject = obj.stream;
+      */
     };
 
-    pc.onaddstream({ stream: localVideoStream });
     pc.addStream(localVideoStream);
 
     pc.onconnectionstatechange = (e) =>
@@ -188,7 +206,8 @@
   };
 
   const createPeerAnswer = async (offer) => {
-    const pc = initPeer();
+    // requester position
+    const pc = initPeer(offer.negotiator);
 
     await pc.setRemoteDescription({ type: 'offer', sdp: offer.offer });
     const answer = await negotiateLocalDescription(pc, false);
@@ -202,7 +221,6 @@
       await handlePeerConnection();
 
       await sleep(1000);
-      return;
     }
   };
 
@@ -213,6 +231,12 @@
       video: true,
       audio: false,
     });
+
+    // add local video
+    const localVideoElement = document.querySelector(
+      `[data-position="${negotiator}"]`
+    );
+    localVideoElement.srcObject = localVideoStream;
 
     await handleIncommingOffers();
 
