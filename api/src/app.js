@@ -17,7 +17,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
  * }
  */
 
-const negotiations = [];
+let negotiations = [];
 
 let offerIdentity = 0;
 
@@ -26,12 +26,10 @@ let offerIdentity = 0;
  *  id: 0
  * }
  */
-const people = new Set();
 
 app.get('/reset', (req, res) => {
-  people.forEach((i) => people.delete(i));
-
-  negotation.forEach((i) => negotation.pop());
+  negotiations = [];
+  res.send(negotiations);
 });
 
 /**
@@ -75,7 +73,7 @@ app.get('/offers', (req, res) => {
         	Negotiation neg = player.getNegotiations().stream()
         			.filter(n -> n.isOffering() && n.getNegotiator().getIdentity() != requesterIdentity)
         			.max(Comparator.comparing(Negotiation::getCreationTimestamp))
-        			.orElse(null);
+        			.orElse(null); 
         	
         	if(neg != null) negotiations.add(neg);
         }
@@ -101,25 +99,22 @@ app.get('/offers', (req, res) => {
     // get last offer
     const lastElement = arrMax(offers, 'created');
 
-    if (neg !== undefined) negs.push(lastElement);
+    if (lastElement !== undefined) negs.push(lastElement);
   }
 
-  console.log('negs', negs);
   res.send(negs);
 });
 
 app.get('/answers', (req, res) => {
   const requester = Number.parseInt(req.query.requester);
 
-  const playerNegotiations = negotiations.filter(
-    (n) => n.negotiator == requester
-  );
+  const playerNegotiations = negotiations
+    .filter((n) => n.negotiator == requester)
+    .filter((n) => isAnswering(n));
 
   const max = arrMax(playerNegotiations, 'identity');
 
-  const responseToSend = isAnswering(max) ? max : [];
-
-  res.send(responseToSend);
+  res.send(!!max ? [max] : []);
 });
 
 app.get('/negotiations', (req, res) => {
